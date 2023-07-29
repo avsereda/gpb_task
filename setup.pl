@@ -8,7 +8,7 @@ use utf8;
 my $db_ready = undef;
 my $timeout  = 10;
 
-for my $n (1 .. 3) {
+for my $n (1 .. 10) {
     sleep $timeout;
     system 'cat mysql_schema.sql | mysql -uroot -proot -hmariadb';
     if ($? == 0) {
