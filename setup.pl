@@ -6,7 +6,7 @@ use v5.24;
 use utf8;
 
 my $db_ready = undef;
-my $timeout  = 30;
+my $timeout  = 10;
 
 for my $n (1 .. 3) {
     sleep $timeout;

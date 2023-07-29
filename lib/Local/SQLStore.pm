@@ -4,6 +4,7 @@ our $VERSION = '0.1';
 
 use strict;
 use warnings;
+use v5.24;
 use Exporter qw(import);
 our @EXPORT_OK = qw();
 
@@ -101,7 +102,6 @@ sub search_to_address {
         }
 
         $stmt->finish();
-        
         if (%int_ids) { # ... then load messages
             $stmt = $self->{db}->prepare(
                 sprintf('SELECT created, str FROM message WHERE int_id IN (%s) ORDER BY created, int_id LIMIT 101',

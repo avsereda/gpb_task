@@ -6,6 +6,7 @@ use v5.24;
 use utf8;
 use Local::SQLStore;
 use Local::Mail::LogFileParser;
+use Data::Dumper qw(Dumper);
 
 my $LOG_FILE    = 'assets/out.zip';
 my $DB_DSN      = "DBI:mysql:database=test;host=mariadb"; 
