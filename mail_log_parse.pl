@@ -18,6 +18,7 @@ my $logs     = [];
 my $parser   = undef;
 my $error    = '';
 
+my %id_set;
 ($parser, $error) = Local::Mail::LogFileParser->new($LOG_FILE, 
     process => sub {
         my ($msg_id, $log_entry) = @_;
@@ -26,7 +27,7 @@ my $error    = '';
         for my $part (@{ $log_entry->{parts} }) {
             if ($part->{flag} eq '<=') {
                 $msg->{created} = $part->{datetime} if not $msg->{created};
-                $msg->{id}      = $part->{id} // '';
+                $msg->{id}      = $part->{id};
                 $msg->{int_id}  = $msg_id;
                 $msg->{str}     = $part->{text};
 
@@ -44,8 +45,14 @@ my $error    = '';
             }
         }
 
-        if ($msg->{int_id} and $msg->{id}) {
-            push @{ $messages }, $msg;
+        if ($msg->{id}) {
+            if (not exists $id_set{$msg->{id}}) {
+                $id_set{$msg->{id}} = undef;
+                push @{ $messages }, $msg;
+            } else {
+                say STDERR 'Warning: Prevent from inserting duplicate id='. ($msg->{id} // '') 
+                    .' message_id=['. ($msg->{int_id} // '') .']';
+            }
         }
     });
 

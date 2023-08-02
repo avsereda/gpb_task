@@ -57,28 +57,27 @@ sub preparse_log_line {
 
     if ($log_line =~ /^([\d\-]+\s[\d\:]+)\s+([\w\d-]+)\s+([^ ]+)\s+(.*)/i) {
         my ($datetime, $message_id, $flag, $raw_message) = ($1, $2, $3, $4);
-        if ($flag) {
-            my $entry = {
-                flag        => $flag, 
-                text        => $raw_message,
-                datetime    => $datetime,
-                status      => 1,
-            };
 
-            if ($flag eq '<=' and $raw_message =~ /.*?id=([^\s]+)/) {
-                $entry->{id} = $1;
+        my $entry = {
+            flag        => $flag, 
+            text        => $raw_message,
+            datetime    => $datetime,
+            status      => 1,
+        };
 
-            } elsif ($flag =~ /(?:\=\=|\=\>|\-\>|\*\*)/ and $raw_message =~ /^([^\@]+\@[^\s:]+)/) {
-                my $email = $1;
-                $email = $1 if $email =~ /^.+?\<([^ \>]+)\>$/;
+        if ($flag eq '<=' and $raw_message =~ /.*?id=([^\s]+)/) {
+            $entry->{id} = $1;
 
-                $entry->{to_address} = $email;
-            } elsif ($flag eq '**') {
-                $entry->{status} = 0;
-            }
-
-            push @{ $self->{cache}{$message_id}{parts} }, $entry;
+        } elsif ($flag =~ /(?:\=\=|\=\>|\-\>|\*\*)/ and $raw_message =~ /^([^\@]+\@[^\s:]+)/) {
+            my $email = $1;
+            $email = $1 if $email =~ /^.+?\<([^ \>]+)\>$/;
+            $entry->{to_address} = $email;
+        } elsif ($flag eq '**') {
+            $entry->{status} = 0;
         }
+
+        push @{ $self->{cache}{$message_id}{parts} }, $entry
+            if $message_id;
     }
 }
 
