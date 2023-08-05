@@ -1,5 +1,6 @@
 #! /usr/bin/env perl
 
+use lib 'lib';
 use strict;
 use warnings;
 use utf8;
@@ -32,7 +33,7 @@ if ($q->param) {
         if ($error) {
             say STDERR "$error\n";
         } else {
-            ($search_result, $truncated) = $db->search_to_address($email);
+            ($search_result, $truncated) = $db->search_address($email);
             my $error = $db->error_message;
             if ($error) {
                 say STDERR "$error\n";

@@ -78,7 +78,7 @@ sub create_logs {
     $self->insert_txn('log', $logs);
 }
 
-sub search_to_address {
+sub search_address {
     my ($self, $to_address) = @_;
 
     my @result;
