@@ -181,3 +181,11 @@ prove t/
 Нормальный вывод
 
 ![Alt text](/assets/screenshots/screen_01.png?raw=true)
+
+Пример вывода сообщение с неудавшейся доставкой
+
+![Alt text](/assets/screenshots/screen_02.png?raw=true)
+
+Пример сообщения информирующего о том, что вывод усечен
+
+![Alt text](/assets/screenshots/screen_03.png?raw=true)
