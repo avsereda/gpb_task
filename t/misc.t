@@ -17,7 +17,7 @@ sub test_parse_config {
       if not $config;
 
     my $want = {
-        db_dsn      => 'DBI:mysql:database=test;host=mariadb',
+        db_dsn      => 'DBI:mysql:database=test;host=127.0.0.1',
         db_user     => 'test',
         db_password => 'test',
     };

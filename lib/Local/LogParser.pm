@@ -7,6 +7,7 @@ use v5.24;
 use utf8;
 use Getopt::Std;
 use Local::Misc qw(parse_config);
+use Local::Store;
 use open qw(:std :encoding(utf-8))
   ; # Мы хотим чтобы все FILEHANDLE работали с многобайтовми последовательностями "по-умолчанию"
 
@@ -72,30 +73,59 @@ sub run {
     $self->load_config;
     $self->db_connect;
 
-    for my $file ( @{ $self->{files} } ) {
-        $self->parse_log_file(
-            $file,
-            sub {
-                my ($m) = @_;
-                return 1;
-            }
-        );
+    Local::Store::txn {
+
+# Создаем SQL транзакцию, в которой мы будем выполнять вставку данных
+
+        my $th = shift;
+        ; # В качестве первого аргумента в блок приходит statement
+
+        for my $file ( @{ $self->{files} } )
+        { # Выполняем разбор каждого переданного файла...
+            $self->parse_log_file(
+                $file,
+                sub {
+                    my $m = shift;
+                    $th->execute(
+                        $m->{datetime}, $m->{message_id}, $m->{flag},
+                        $m->{to_address} // '',
+                        $m->{id}         // '',
+                        $m->{text}
+                    );
+
+                    return 1;
+                }
+            );
+        }
+    }
+    $self->{db}, $self->{db}->sql_query_insert_message;
+    
+    if ( $self->{db}->error ) {
+        die 'Error: ' . $self->{db}->error, "\n";
     }
 
     $self->db_close;
-    return 1;
 }
 
 sub db_connect {
     my ($self) = @_;
 
-    return 1;
+    my $error;
+    ( $self->{db}, $error ) = Local::Store->new(
+        $self->{config}{db_dsn},
+        user     => $self->{config}{db_user},
+        password => $self->{config}{db_password}
+    );
+
+    if ($error) {
+        die "Error: $error\n";
+    }
 }
 
 sub db_close {
     my ($self) = @_;
-
-    return 1;
+    $self->{db}->close
+      if $self->{db};
 }
 
 # Вывод справки по параметрам командной строки
@@ -160,7 +190,10 @@ sub parse_log_file {
 
 # Предварительно разбираем строку лога...
 # Достаем общие для всех и интересующих нас записи сообщения.
-        if (/^([\d\-]+\s[\d\:]+)\s+([\w\d-]+)\s+([^ ]+)\s+(.+)/i) {
+        if (
+/^([\d\-]+\s[\d\:]+)\s+([\w\d-]+)\s+((?:\<\=|\=\=|\=\>|\-\>|\*\*))\s+(.+)/i
+          )
+        {
             my $m = {
                 datetime   => $1,
                 message_id => $2,

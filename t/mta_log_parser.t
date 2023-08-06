@@ -21,11 +21,7 @@ sub test_mta_log_parser {
     ok( $p->load_config,                    'can load config' );
     ok( $p->{config_file} eq 'config.conf', 'can accpet -c option' );
 
-    is_deeply(
-        $p->{files},
-        [ 'assets/mta.log' ],
-        'can parse file parameters'
-    );
+    is_deeply( $p->{files}, ['assets/mta.log'], 'can parse file parameters' );
 
     ok(
         $p->parse_log_file(
@@ -40,6 +36,9 @@ sub test_mta_log_parser {
                       '120213150629.AUCTION_RENEW.926291@whois.somehost.ru';
                     return 0
                       if $m->{flag} eq '=='
+                      and $m->{to_address} ne 'bswdhpjxorekjaelb@gmail.com';
+                    return 0
+                      if $m->{flag} eq '**'
                       and $m->{to_address} ne 'bswdhpjxorekjaelb@gmail.com';
 
                     return 1;
