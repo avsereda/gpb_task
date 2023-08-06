@@ -7,7 +7,7 @@ use warnings;
 use v5.24;
 use utf8;
 use Data::Dumper qw(Dumper);
-use Test::More tests => 2;
+use Test::More tests => 3;
 use Local::Store;
 
 sub test_store {
@@ -55,6 +55,12 @@ sub test_store {
           or die $db->error . "\n",
         'can insert to database' );
 
+    my ( $result, $truncated );
+    ( $result, $truncated ) =
+      $db->load_for_to_address('bswdhpjxorekjaelb@gmail.com');
+
+    ok( scalar @$result > 0 or die $db->error . "\n", 'can search email' );
+    
     $db->close if $db;
 }
 

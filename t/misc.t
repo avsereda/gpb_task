@@ -12,17 +12,17 @@ use Local::Misc qw(parse_config);
 
 sub test_parse_config {
     my $filename = 'config.conf';
-    my $config = parse_config($filename);
+    my $config   = parse_config($filename);
     return 0
       if not $config;
 
-    my $want = {
+    my $want_config = {
         db_dsn      => 'DBI:mysql:database=test;host=127.0.0.1',
         db_user     => 'test',
         db_password => 'test',
     };
 
-    is_deeply( $config, $want, 'can parse config' );
+    is_deeply( $want_config, $config, 'can parse config' );
 }
 
 test_parse_config();

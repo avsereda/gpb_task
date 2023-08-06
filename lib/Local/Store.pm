@@ -26,14 +26,11 @@ my ($db, $error) = Local::Store->new($dsn, $user, $password);
 
 $db->insert($table, \@messages);
 
-txn {
-    my $th = shift;
-    ...
-} $db, $sql_query
+txn { my $th = shift; ... } $db, $sql_query
 
 $db->error;
 
-$db->load_for_to_address('foo@exapmle.com', n => 100);
+$db->load_for_to_address('foo@exapmle.com');
 
 $db-close;
 
@@ -48,11 +45,11 @@ $db-close;
 
 =over
 
-=item B<SQL_MESSAGE_COLUMNS> - названия столбцов таблицы сообщений.  
+=item B<SQL_MESSAGE_COLUMNS> 
+
+Названия столбцов таблицы сообщений. Столбцы таблицы: I<datetime message_id flag to_address id text>
 
 =back
-
-Столбцы таблицы: I<datetime message_id flag to_address id text>
 
 =cut
 
@@ -79,7 +76,9 @@ sub try(&) {
 
 =over
 
-=item I<($db, $error)> = new(I<$dsn>, user => I<$user>, password => I<$password>) - метод класса, создает новое подключение к базе.  
+=item I<($db, $error)> = new(I<$dsn>, user => I<$user>, password => I<$password>)
+
+Создает новое подключение к базе.  
 
 Принимает строку, описывающую DSN в соответствии с синтаксисом DBI,
 а так же логин и пароль от базы данных.
@@ -113,7 +112,9 @@ sub new {
 
 =over
 
-=item B<close()> - закрывает соединение с базой.
+=item B<close()> 
+
+Закрывает соединение с базой.
 
 Не принимает параметров.
 Не возвращает значений.
@@ -130,7 +131,9 @@ sub close {
 
 =over
 
-=item B<error()> - возвращает строку ошибки последней неудавшейся операции.
+=item B<error()> 
+
+Возвращает строку ошибки последней неудавшейся операции.
 
 Не принимает параметров.
 
@@ -145,11 +148,12 @@ sub error {
 
 =over
 
-=item B<txn({ ... } $self, $sql_query)> - SQL транзакция.
+=item B<txn({ ... } $self, $sql_query)> 
+
+SQL транзакция.
+Возвращает истину в случаи, если не было ошибок.
 
 =back
-
-Возвращает истину в случаи, если не было ошибок.
 
 =cut
 
@@ -175,7 +179,10 @@ sub txn(&$$) {
 
 =over
 
-=item B<sql_query_insert_message)> - SQL запрос, который используется для вставке в таблицу сообщений.  
+=item B<sql_query_insert_message)> 
+
+SQL запрос, который используется для вставке в таблицу сообщений.  
+Возвращает строку запроса.
 
 =back
 
@@ -189,12 +196,13 @@ sub sql_query_insert_message {
     my $placeholders = join ',', split( //, '?' x scalar @columns );
 
     return "INSERT INTO message ($columns) VALUES ($placeholders)";
-};
+}
 
 =over
 
-=item B<insert($table, \@messages)> - осуществляет вставку строк в таблицу SQL.
+=item B<insert($table, \@messages)> 
 
+Осуществляет вставку строк в таблицу SQL.
 Принимает название таблицы и ссылку на массив ссылок на хеш, ключи которого соответствуют именам
 столбцов таблицы. Вставка выполняется в рамках одной транзакции.
 
@@ -219,7 +227,79 @@ sub insert {
         }
     }
     $self, $self->sql_query_insert_message;
-    return not $self->{error};
+
+    return $self->{error} eq '';
+}
+
+=over
+
+=item B<load_for_to_address($to_address)> 
+
+Выпоняет поиск по адресу получателя.
+
+Возвращает результат поиска по адресу получателя в виде ссылки на массив массивов,
+представляющих запись в базе, а так же флаг сообщающий о том, что вывод был усечен.
+
+=back
+
+=cut
+
+sub load_for_to_address {
+    my ( $self, $to_address, %params ) = @_;
+
+    my $result    = [];
+    my $truncated = 0;
+
+    $self->{error} = try {
+        my %message_ids;
+        my $columns = join ',', SQL_MESSAGE_COLUMNS;
+        my $db      = $self->{db};
+
+# В первую очередь загружаем все строки, для которых совпадает to_address
+        my $th = $db->prepare(
+            sprintf(
+'SELECT %s FROM message WHERE to_address LIKE CONCAT(%s, \'%%\') LIMIT 101',
+                $columns, $db->quote($to_address)
+            )
+        );
+
+        $th->execute();
+        while ( my (@row) = $th->fetchrow() ) {
+            $message_ids{ $row[1] } = undef;
+            push @{$result}, \@row;
+        }
+
+# Далее загружаем все сообщения с флагом <= и теми message_id, которые были получены в первом запросе.
+        if (%message_ids) {
+            my $th = $db->prepare(
+                sprintf(
+'SELECT %s FROM message WHERE message_id IN (%s) AND flag = \'<=\' LIMIT 101',
+                    $columns,
+                    join ',', split( //, '?' x scalar keys %message_ids )
+                )
+            );
+
+            $th->execute( keys %message_ids );
+            while ( my (@row) = $th->fetchrow() ) {
+                push @{$result}, \@row;
+            }
+        }
+
+        $th->finish;
+    };
+
+    return [], 0
+      if $self->{error};
+
+    if ( scalar @{$result} > 100 ) {
+        $result = [ @$result[ 0 .. 99 ] ]
+          ; # Если в результирующем массиве более 100 элементов, берем первые 100
+
+        $truncated = 1;
+    }
+
+    $result = [ sort { $a->[0] cmp $b->[0] } @$result ];
+    return $result, $truncated;
 }
 
 1;

@@ -38,7 +38,9 @@ Local::LogParser->new->run;
 
 =over
 
-=item B<new()> - метод класса, создает новый экземпляр приложения
+=item B<new()> 
+
+Cоздает новый экземпляр приложения
 
 Не принимает параметров.
 Возвращает экземпляр приложения.
@@ -57,7 +59,9 @@ sub new {
 
 =over
 
-=item B<run()> - метод объекта, запускает приложение и выполняет процесс анализа данных и формирование записей в базе.
+=item B<run()>
+
+Запускает приложение и выполняет процесс анализа данных и формирование записей в базе.
 
 Не принимает параметров.
 Не возвращает значений.
@@ -72,6 +76,8 @@ sub run {
     $self->parse_options;
     $self->load_config;
     $self->db_connect;
+
+    my $db = $self->{db};
 
     Local::Store::txn {
 
@@ -98,10 +104,10 @@ sub run {
             );
         }
     }
-    $self->{db}, $self->{db}->sql_query_insert_message;
-    
-    if ( $self->{db}->error ) {
-        die 'Error: ' . $self->{db}->error, "\n";
+    $db, $db->sql_query_insert_message;
+
+    if ( $db->error ) {
+        die 'Error: ' . $db->error, "\n";
     }
 
     $self->db_close;
