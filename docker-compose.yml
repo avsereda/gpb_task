@@ -1,5 +1,23 @@
 version: "3.8"
 services:
+  web:
+    build: .
+    volumes:
+      - type: bind
+        source: $PWD/cgi-bin
+        target: /usr/lib/cgi-bin
+
+      - type: bind
+        source: $PWD/www
+        target: /var/www/html
+
+    ports:
+      - "8080:80"
+    depends_on:
+      - mariadb
+    networks:
+      - back
+
   mariadb:
     image: mariadb:latest
     environment:

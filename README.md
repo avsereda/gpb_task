@@ -176,3 +176,8 @@ prove t/
 Весь код отформатирован с помощью `perltidy` (Используются настройки "по-умолчанию").
 См. `perlstyle(1)`
 
+## Скриншоты
+
+Нормальный вывод
+
+![Alt text](/assets/screenshots/screen_01.png?raw=true)
