@@ -9,12 +9,15 @@ use CGI qw(:standart header -utf8);
 use Mojo::Template;
 use Local::Store;
 
+# Параметры подключения к базе могут быть указаны прямо тут
+# или получены через  переменные окружения (например при запуске
+# внутри docker контейнера)
+
 my $DB_DSN      = "DBI:mysql:database=test;host=mariadb";
 my $DB_USER     = "test";
 my $DB_PASSWORD = 'test';
 
 my $q = CGI->new;
-
 say $q->header("text/html; charset=UTF-8");
 
 my $title         = '';
@@ -24,6 +27,8 @@ my $search_result = [];
 my $email         = '';
 
 if ( $q->param ) {
+
+    # Обрабатываем данные формы
     if ( $q->param('email_address') =~ /^\s*([\w\d+_.-]+@[^\s]+?)\s*$/i ) {
         $email = $1;
         $title = 'Результат поиска для ' . $email;
