@@ -90,7 +90,7 @@ __DATA__
         <div class="container-fluid">
             <div class="collapse navbar-collapse" id="nav">
                 <form class="d-flex w-100" method="post" action="#">
-                    <input class="form-control me-2" type="search" name="email_address" placeholder="foo@example.com" required>
+                    <input class="form-control me-2" value="<%= $email %>" type="search" name="email_address" placeholder="foo@example.com" required>
                     <button class="btn btn-outline-success" type="submit">Поиск</button>
                 </form>
             </div>
@@ -107,7 +107,7 @@ __DATA__
             Показаны не все доступные записи 
         </div>
     <% } %>
-    <% if ($email and not scalar @$search_result) { %>
+    <% if ($email and not @$search_result) { %>
         <div class="alert alert-dark m-3" role="alert">
             Ничего не найдено
         </div>
