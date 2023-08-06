@@ -7,7 +7,7 @@
 - Файл лога maillog
 - Схема таблиц в БД (допускается использовать postgresql или mysql):
 
-```
+```SQL
 CREATE TABLE message (
     created TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     id VARCHAR NOT NULL,
