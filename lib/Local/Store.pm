@@ -283,6 +283,8 @@ sub load_for_to_address {
             while ( my (@row) = $th->fetchrow() ) {
                 push @{$result}, \@row;
             }
+
+            $th->finish;
         }
 
         $th->finish;
