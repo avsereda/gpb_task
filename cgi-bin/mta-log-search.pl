@@ -29,7 +29,7 @@ my $email         = '';
 if ( $q->param ) {
 
     # Обрабатываем данные формы
-    if ( $q->param('email_address') =~ /^\s*([\w\d+_.-]+@[^\s]+?)\s*$/i ) {
+    if ( $q->param('email_address') =~ /^\s*([\w\d+_.-]+@\S+?)\s*$/ ) {
         $email = $1;
         $title = 'Результат поиска для ' . $email;
         my ( $db, $error ) = Local::Store->new(
